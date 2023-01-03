@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import styles from './AuthorTitle.module.css';
 
 export const AuthorTitle = ({ title }) => {
@@ -9,3 +10,7 @@ export const AuthorTitle = ({ title }) => {
 };
 
 export default AuthorTitle;
+
+AuthorTitle.propTypes = {
+  title: PropTypes.string.isRequired,
+};

@@ -1,31 +1,33 @@
+import PropTypes from 'prop-types';
+import { useEffect } from 'react';
 import styles from './Modal.module.css';
-import { Component } from 'react';
 
-class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.props.closeModalByEsc);
-  }
+const Modal = ({ closeModalByEsc, closeModal, large }) => {
+  useEffect(() => {
+    const closeByEsc = event => {
+      if (event.code === 'Escape') {
+        closeModalByEsc();
+      }
+    };
+    window.addEventListener('keydown', closeByEsc);
+    return () => {
+      window.removeEventListener('keydown', closeByEsc);
+    };
+  }, [closeModalByEsc]);
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.props.closeModalByEsc);
-  }
-
-  closeByEsc = event => {
-    if (event.code === 'Escape') {
-      this.props.closeModalByEsc();
-    }
-  };
-
-  render() {
-    const { closeModal, large } = this.props;
-    return (
-      <div onClick={closeModal} className={styles.overlay}>
-        <div className={styles.modal}>
-          <img src={large} alt="Something interesting" />
-        </div>
+  return (
+    <div onClick={closeModal} className={styles.overlay}>
+      <div className={styles.modal}>
+        <img src={large} alt="Something interesting" />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default Modal;
+
+Modal.propTypes = {
+  large: PropTypes.string.isRequired,
+  closeModal: PropTypes.func.isRequired,
+  closeModalByEsc: PropTypes.func.isRequired,
+};

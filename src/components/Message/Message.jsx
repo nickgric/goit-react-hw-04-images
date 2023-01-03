@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 import styles from './Message.module.css';
 
 const Message = ({ message }) => {
@@ -9,3 +11,7 @@ const Message = ({ message }) => {
 };
 
 export default Message;
+
+Message.propTypes = {
+  message: PropTypes.string.isRequired,
+};

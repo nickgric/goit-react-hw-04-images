@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 
 import { fetch } from '../utils/fetch';
 
@@ -11,138 +11,108 @@ import Button from './Button';
 import Modal from './Modal';
 import Message from './Message';
 
-export class App extends Component {
-  state = {
-    photos: [],
-    query: null,
-    page: 1,
-    pages: null,
-    status: 'idle', // idle, resolved, rejected
-    loading: false,
-    modal: false,
-    large: null,
-  };
+export const App = () => {
+  const [photos, setPhotos] = useState([]);
+  const [query, setQuery] = useState(null);
+  const [page, setPage] = useState(null);
+  const [pages, setPages] = useState(null);
+  const [status, setStatus] = useState('idle'); // idle, resolved, rejected
+  const [loading, setLoading] = useState(false);
+  const [modal, setModal] = useState(false);
+  const [large, setLarge] = useState(null);
 
-  async componentDidUpdate(_, prevState) {
-    const { query, page } = this.state;
-
-    if (prevState.page !== page) {
-      const data = await fetch(query, page);
-
-      this.setState(prevState => ({
-        photos: [...prevState.photos, ...data.pictures],
-        loading: false,
-      }));
+  useEffect(() => {
+    if (!page) {
+      return;
     }
 
-    if (prevState.query !== query) {
-      const data = await fetch(query, page);
-
-      if (data.pictures.length !== 0) {
-        this.setState({
-          photos: data.pictures,
-          pages: data.pages,
-          status: 'resolved',
-          page: 1,
-          query,
-          loading: false,
-        });
-      }
-
+    fetch(query, page).then(data => {
       if (data.pictures.length === 0) {
-        this.setState({
-          status: 'rejected',
-          loading: false,
-        });
+        setStatus('rejected');
+        setLoading(false);
+        return;
       }
-    }
-  }
 
-  onSubmit = async event => {
+      setPhotos(prevState => [...prevState, ...data.pictures]);
+      setPages(data.pages);
+      setStatus('resolved');
+      setLoading(false);
+    });
+  }, [query, page]);
+
+  const onSubmit = event => {
     event.preventDefault();
 
-    const query = event.target.elements.input.value;
+    const newQuery = event.target.elements.input.value;
 
-    if (query.trim() === '') {
+    if (newQuery.trim() === '') {
       alert('Type your query!');
       return;
     }
 
-    this.setState({
-      photos: [],
-      loading: true,
-      status: 'idle',
-      query,
-    });
+    setPhotos([]);
+    setLoading(true);
+    setStatus('idle');
+    setPage(1);
+    setQuery(newQuery);
   };
 
-  onLoadMore = async () => {
-    const { page } = this.state;
-
-    const nextPage = page + 1;
-
-    this.setState({
-      loading: true,
-      page: nextPage,
-    });
+  const onLoadMore = () => {
+    setLoading(true);
+    setPage(prevState => prevState + 1);
   };
 
-  modalHandler = large => {
-    this.setState({ modal: true, large });
+  const modalHandler = newLarge => {
+    setLarge(newLarge);
+    setModal(true);
   };
 
-  closeModal = event => {
+  const closeModal = event => {
     if (event.target === event.currentTarget) {
-      this.setState({ modal: false });
+      setModal(false);
     }
   };
 
-  closeModalByEsc = () => {
-    this.setState({ modal: false });
+  const closeModalByEsc = () => {
+    setModal(false);
   };
 
-  render() {
-    const { photos, status, modal, page, pages, loading, large } = this.state;
-    const { onSubmit, onLoadMore, modalHandler, closeModal, closeModalByEsc } =
-      this;
+  return (
+    <>
+      <AuthorTitle title="React-HW04_03 @nickgric" />
 
-    return (
-      <>
-        <AuthorTitle title="React-HW03_02 @nickgric" />
+      <Searchbar onSubmit={onSubmit} />
 
-        <Searchbar onSubmit={onSubmit} />
+      {status === 'resolved' && (
+        <ImageGallery>
+          {photos.map(({ small, large, id }) => {
+            return (
+              <ImageGalleryItem
+                modalHandler={modalHandler}
+                small={small}
+                large={large}
+                key={id}
+                id={id}
+              />
+            );
+          })}
+        </ImageGallery>
+      )}
+      {status === 'resolved' && page < pages && (
+        <Button title="Load more" onClick={onLoadMore} />
+      )}
 
-        {status === 'resolved' && (
-          <ImageGallery>
-            {photos.map(({ small, large, id }) => {
-              return (
-                <ImageGalleryItem
-                  modalHandler={modalHandler}
-                  small={small}
-                  large={large}
-                  key={id}
-                  id={id}
-                />
-              );
-            })}
-          </ImageGallery>
-        )}
-        {status === 'resolved' && page < pages && (
-          <Button title="Load more" onClick={onLoadMore} />
-        )}
+      {loading && <Loader />}
 
-        {loading && <Loader />}
+      {status === 'rejected' && <Message message="Nothing found" />}
 
-        {status === 'rejected' && <Message message="Nothing found" />}
-
-        {modal && (
-          <Modal
-            closeModal={closeModal}
-            closeModalByEsc={closeModalByEsc}
-            large={large}
-          />
-        )}
-      </>
-    );
-  }
-}
+      {modal && (
+        <Modal
+          closeModal={closeModal}
+          closeModalByEsc={closeModalByEsc}
+          large={large}
+        />
+      )}
+    </>
+  );
+};
