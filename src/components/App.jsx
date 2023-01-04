@@ -5,7 +5,6 @@ import { fetch } from '../utils/fetch';
 import AuthorTitle from './AuthorTitle';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
-import ImageGalleryItem from './ImageGalleryItem';
 import Loader from './Loader';
 import Button from './Button';
 import Modal from './Modal';
