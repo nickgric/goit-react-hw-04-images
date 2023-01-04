@@ -26,18 +26,21 @@ export const App = () => {
       return;
     }
 
-    fetch(query, page).then(data => {
-      if (data.pictures.length === 0) {
-        setStatus('rejected');
-        setLoading(false);
-        return;
-      }
+    setLoading(true);
 
-      setPhotos(prevState => [...prevState, ...data.pictures]);
-      setPages(data.pages);
-      setStatus('resolved');
-      setLoading(false);
-    });
+    fetch(query, page)
+      .then(data => {
+        if (data.pictures.length === 0) {
+          setStatus('rejected');
+          setLoading(false);
+          return;
+        }
+
+        setPhotos(prevState => [...prevState, ...data.pictures]);
+        setPages(data.pages);
+        setStatus('resolved');
+      })
+      .finally(setLoading(false));
   }, [query, page]);
 
   const onSubmit = event => {
@@ -51,14 +54,12 @@ export const App = () => {
     }
 
     setPhotos([]);
-    setLoading(true);
     setStatus('idle');
     setPage(1);
     setQuery(newQuery);
   };
 
   const onLoadMore = () => {
-    setLoading(true);
     setPage(prevState => prevState + 1);
   };
 
@@ -84,19 +85,7 @@ export const App = () => {
       <Searchbar onSubmit={onSubmit} />
 
       {status === 'resolved' && (
-        <ImageGallery>
-          {photos.map(({ small, large, id }) => {
-            return (
-              <ImageGalleryItem
-                modalHandler={modalHandler}
-                small={small}
-                large={large}
-                key={id}
-                id={id}
-              />
-            );
-          })}
-        </ImageGallery>
+        <ImageGallery photos={photos} modalHandler={modalHandler} />
       )}
       {status === 'resolved' && page < pages && (
         <Button title="Load more" onClick={onLoadMore} />
